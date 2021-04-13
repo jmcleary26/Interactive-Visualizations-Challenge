@@ -1,52 +1,54 @@
-// FUNCTION #1 of 4
+// FUNCTION for building the charts in the dashboard
 function buildCharts(UID) {
 
-    var barChart = d3.select("#bar");
-    var bubbleChart = d3.select("#bubble");
-    var guageChart = d3.select("#gauge");
-
     d3.json("samples.json").then(data => {
-        console.log(data.samples)
+        // console.log(data.samples)
+
+        // Grab data from the samples list
         var sampleids = data.samples
-        filteredData = sampleids.filter(sampleid => sampleid.id == UID)[0]
-        console.log(filteredData)
+        var filteredData = sampleids.filter(sampleid => sampleid.id == UID)[0]
+        // console.log(filteredData)
+
+        // Grab data from the metadata list
+        var boxData = data.metadata
+        var filteredBoxData = boxData.filter(sampleid => sampleid.id == UID)[0]
+        // console.log(filteredBoxData)
 
         // Variables for each graph
-        var ids = data.samples[0].otu_ids;
-        console.log(ids)
-        var values = data.samples[0].sample_values;
-        console.log(values)
-        var labels = data.samples[0].otu_labels;
-        console.log(labels)
+        var ids = filteredData.otu_ids;
+        // console.log(ids)
+        var values = filteredData.sample_values;
+        // console.log(values)
+        var labels = filteredData.otu_labels;
+        // console.log(labels)
 
         // Variables for top 10 bar chart 
-        var topValues = data.samples[0].sample_values.slice(0,11).reverse();
-        console.log(topValues)
-        var topLabels = data.samples[0].otu_labels.slice(0,11);
-        console.log(topLabels)
-        var topIds = data.samples[0].otu_ids.slice(0,11).reverse();
-        console.log(topIds)
+        var topValues = filteredData.sample_values.slice(0,11).reverse();
+        // console.log(topValues)
+        var topLabels = filteredData.otu_labels.slice(0,11);
+        // console.log(topLabels)
+        var topIds = filteredData.otu_ids.slice(0,11).reverse();
+        // console.log(topIds)
         var fullId = topIds.map(topIds => "OTU " + topIds);
+        // console.log(fullId)
         
         // Bar Chart
-        var trace1 = {
+        var traceBar = [{
             x: topValues,
             y: fullId,
             text: topLabels,
             type: "bar",
             orientation: "h",
-        };
+        }];
 
-        var layout1 = {
+        var layoutBar = {
             title: "Top 10 OTU Ids",
         }
 
-        var dataBar = [trace1];
-
-        Plotly.newPlot("bar", dataBar, layout1)
+        Plotly.newPlot("bar", traceBar, layoutBar)
 
         // Bubble Chart
-        var trace2 = [{
+        var traceBubble = [{
             x: ids,
             y: values,
             text: labels,
@@ -57,36 +59,55 @@ function buildCharts(UID) {
             }
         }];
 
-        var layout2 = {
+        var layoutBubble = {
             xaxis: {
                 title: {
                     text: "OTU ID"},
                 }
         };
         
-        Plotly.newPlot("bubble", trace2, layout2);
+        Plotly.newPlot("bubble", traceBubble, layoutBubble);
 
         // Gauge Chart
-        var trace3 = [
+        var traceGauge = [
             {
               domain: { x: [0, 1], y: [0, 1] },
-              value: UID,
+              value: filteredBoxData.wfreq,
               title: { text: "Belly Button Washing Frequency" },
               type: "indicator",
               mode: "gauge+number",
               delta: { reference: 400 },
-              gauge: { axis: { range: [null, 500] } }
+              gauge: {
+                  axis: { range: [null, 9] },
+                  bar: { color: "red"},
+                  steps: [
+                      {range: [0,1], color: "charcoal"},
+                      {range: [1,2], color: "gray"},
+                      {range: [2,3], color: "lightgray"},
+                      {range: [3,4], color: "lightgreen"},
+                      {range: [4,5], color: "lime"},
+                      {range: [5,6], color: "springgreen"},
+                      {range: [6,7], color: "forestgreen"},
+                      {range: [7,8], color: "green"},
+                      {range: [8,9], color: "darkgreen"},
+                      
+                  ]
+                }
             }
           ];
 
-          var layout3 = { width: 600, height: 400 };
-          Plotly.newPlot("gauge", trace3, layout3);
+          var layoutGauge = { 
+              width: 600, height: 400 
+            };
 
-    })
+          Plotly.newPlot("gauge", traceGauge, layoutGauge);
+        // console.log(filteredBoxData)
+
+     })
 
 };
 
-// FUNCTION #2 of 4
+// FUNCTION for building the demographics box
 function populateDemoInfo(UID) {
 
     var demographicInfoBox = d3.select("#sample-metadata");
@@ -103,14 +124,14 @@ function populateDemoInfo(UID) {
     })
 }
 
-// FUNCTION #3 of 4
+// FUNCTION for changing charts & box with different test subject
 function optionChanged(UID) {
-    console.log(UID);
+    // console.log(UID);
     buildCharts(UID);
     populateDemoInfo(UID);
 }
 
-// FUNCTION #4 of 4
+// FUNCTION for init dashboard
 function initDashboard() {
     var dropdown = d3.select("#selDataset")
     d3.json("samples.json").then(data => {
